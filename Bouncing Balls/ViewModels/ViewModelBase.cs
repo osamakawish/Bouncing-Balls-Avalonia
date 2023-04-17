@@ -1,8 +1,7 @@
 ﻿using ReactiveUI;
 
-namespace Bouncing_Balls.ViewModels
+namespace Bouncing_Balls.ViewModels;
+
+public class ViewModelBase : ReactiveObject
 {
-    public class ViewModelBase : ReactiveObject
-    {
-    }
 }

@@ -14,6 +14,7 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
+    <Grid RowDefinitions="*">
+        <Canvas Name="Canvas" />
+    </Grid>
 </Window>
