@@ -12,7 +12,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        Initialized += delegate {
+        Loaded += delegate {
             _dataContext = (MainWindowViewModel)DataContext!;
             AddBall();
         };
