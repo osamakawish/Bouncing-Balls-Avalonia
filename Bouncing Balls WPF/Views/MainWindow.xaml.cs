@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -24,6 +25,7 @@ public partial class MainWindow
         Loaded += delegate {
             _dataContext = (MainWindowViewModel)DataContext!;
             AddBall();
+            AddCurve();
 
             Storyboard.Begin();
         };
@@ -43,7 +45,29 @@ public partial class MainWindow
         };
     }
 
-    public void AddBall()
+    private void AddCurve()
+    {
+        var arcSegment = new ArcSegment
+        {
+            Point = new (Canvas.ActualWidth, 0),
+            Size = new (Canvas.ActualWidth, 2500),
+            RotationAngle = 0,
+            IsLargeArc = false,
+            SweepDirection = SweepDirection.Counterclockwise
+        };
+        var path = new Path
+        {
+            Stroke = Brushes.Black,
+            StrokeThickness = 1,
+            Data = new PathGeometry(new [] { new PathFigure(
+                    new (0, 0),
+                    new List<PathSegment> { arcSegment }, false) })
+        };
+
+        Canvas.Children.Add(path);
+    }
+
+    private void AddBall()
     {
         var ball = new Ellipse
         {
