@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using Bouncing_Balls.ViewModels;
+using Bouncing_Balls_WPF.ViewModels;
 using Microsoft.VisualBasic.CompilerServices;
 
 namespace Bouncing_Balls_WPF.Views;
@@ -14,7 +14,7 @@ namespace Bouncing_Balls_WPF.Views;
 /// </summary>
 public partial class MainWindow
 {
-    private MainWindowViewModel? _dataContext;
+    private MainWindowViewModel _dataContext;
 
     private Storyboard Storyboard { get; } = new();
 
@@ -22,8 +22,10 @@ public partial class MainWindow
     {
         InitializeComponent();
 
+        _dataContext = new();
+        DataContext = _dataContext;
+
         Loaded += delegate {
-            _dataContext = (MainWindowViewModel)DataContext!;
             AddBall();
             AddCurve();
 
