@@ -7,6 +7,8 @@ namespace Bouncing_Balls_WPF.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
+    private Path Curve { get; } = new();
+
     private List<Ellipse> Balls { get; } = new();
 
     public void SetBalls(Color initialColor, Color finalColor, int count)
