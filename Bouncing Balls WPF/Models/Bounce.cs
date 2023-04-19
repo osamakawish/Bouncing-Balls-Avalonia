@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Timers;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
@@ -19,12 +20,13 @@ public class Bounce
     internal Vector  Velocity { get; private set; }
     internal Vector  Gravity { get; }
 
-    public Bounce(double ballRadius, Path curve, Vector initialPosition, Vector initialVelocity, Vector gravity)
+    public Bounce(Color ballColor, double ballRadius, Path curve, Vector initialPosition, Vector initialVelocity, Vector gravity)
     {
         Ball = new ()
         {
             Width = 2 * ballRadius,
             Height = 2 * ballRadius,
+            Fill = new SolidColorBrush(ballColor)
         };
         Curve = curve; Setup();
         InitialPosition = initialPosition;
@@ -36,7 +38,7 @@ public class Bounce
     {
         Timer.Elapsed += (_,  args) =>
         {
-            if (IsBounce())
+            if (IsBounce(out var normal))
             {
 
             }
@@ -50,8 +52,19 @@ public class Bounce
         };
     }
 
-    private bool IsBounce()
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="reflectionNormal">The vector normal/perpendicular to the tangent at the point of intersection of the curve.</param>
+    /// <returns></returns>
+    private bool IsBounce(out Vector reflectionNormal)
     {
+        // Check if ball intersects the curve.
+
+        // If it does, find the tangent at the point of intersection.
+
+        // Find the normal to the tangent.
+
         return false;
     }
 }
