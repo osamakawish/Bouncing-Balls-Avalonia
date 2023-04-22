@@ -7,8 +7,6 @@ using System.Windows.Shapes;
 
 namespace Bouncing_Balls_WPF.Models;
 
-public delegate Vector ParametricFunction(double t);
-
 public class ParametricCurve : Shape
 {
 #if DEBUG
@@ -47,16 +45,6 @@ public class ParametricCurve : Shape
         => t => (Parametric(t + halfDelta) - Parametric(t - halfDelta)) / (2 * halfDelta);
     public Func<double, double> XFunc => t => Parametric(t).X;
     public Func<double, double> YFunc => t => Parametric(t).Y;
-
-    /// <summary>
-    /// A parametric function which stores the normal/perpendicular vector (in the counter-clockwise direction) at every point on the curve.
-    /// </summary>
-    /// <param name="halfDelta"></param>
-    public ParametricFunction Normal(double halfDelta = 0.05)
-    {
-        var derivative = Derivative(halfDelta);
-        return t => new(-derivative(t).Y, derivative(t).X);
-    }
 
     protected override Geometry DefiningGeometry
     {
@@ -119,19 +107,21 @@ public class ParametricCurve : Shape
     /// <param name="func"></param>
     /// <param name="rateReciprocal"></param>
     /// <param name="halfDelta"></param>
-    /// <param name="steps"></param>
+    /// <param name="steps">The number of steps to apply the iteration. 8 by default, as it is fairly good at achieving a close result.</param>
     /// <returns>A value closer to a zero of <see cref="func"/> than <see cref="guess"/>, assuming no discontinuities.</returns>
-    public double FindZero(double guess, Func<double, double> func, out double rateReciprocal, double halfDelta = 0.005, byte steps = 4)
+    public double FindZero(double guess, Func<double, double> func, out double rateReciprocal, double halfDelta = 0.005, byte steps = 8)
     {
-        rateReciprocal = 2 * halfDelta / (func(guess + halfDelta) - func(guess - halfDelta));
-        if (steps != 0)
-            return FindZero(
-                guess: guess - func(guess) * rateReciprocal,
-                func: func, out rateReciprocal, halfDelta: halfDelta, steps: (byte) (steps - 1));
-        return guess;
+        // May prefer a condition parameter.
+        while (true) {
+            rateReciprocal = 2 * halfDelta / (func(guess + halfDelta) - func(guess - halfDelta));
+            
+            if (steps == 0) return guess;
+            guess -= func(guess) * rateReciprocal;
+            steps -= 1;
+        }
     }
 
     public double FindEquals(double guess, double target, Func<double, double> func, double halfDelta = 0.005,
-        byte steps = 4) 
-        => FindZero(guess, t => func(t) - target, out var _, halfDelta, steps);
+        byte steps = 8) 
+        => FindZero(guess, t => func(t) - target, out _, halfDelta, steps);
 }
