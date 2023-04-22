@@ -41,9 +41,22 @@ public class ParametricCurve : Shape
         get => (double)GetValue(StepProperty);
         set => SetValue(StepProperty, value);
     }
-    public ParametricFunction ParametricFunction { get; }
-    public Func<double, double> XFunc => t => ParametricFunction(t).X;
-    public Func<double, double> YFunc => t => ParametricFunction(t).Y;
+    public ParametricFunction Parametric { get; }
+
+    public ParametricFunction Derivative(double halfDelta = 0.005)
+        => t => (Parametric(t + halfDelta) - Parametric(t - halfDelta)) / (2 * halfDelta);
+    public Func<double, double> XFunc => t => Parametric(t).X;
+    public Func<double, double> YFunc => t => Parametric(t).Y;
+
+    /// <summary>
+    /// A parametric function which stores the normal/perpendicular vector (in the counter-clockwise direction) at every point on the curve.
+    /// </summary>
+    /// <param name="halfDelta"></param>
+    public ParametricFunction Normal(double halfDelta = 0.05)
+    {
+        var derivative = Derivative(halfDelta);
+        return t => new(-derivative(t).Y, derivative(t).X);
+    }
 
     protected override Geometry DefiningGeometry
     {
@@ -51,7 +64,7 @@ public class ParametricCurve : Shape
         {
             var polyline = new PathFigure
             {
-                StartPoint = new (ParametricFunction(Min).X, ParametricFunction(Min).Y),
+                StartPoint = new (Parametric(Min).X, Parametric(Min).Y),
                 Segments = new () { new PolyLineSegment(PolylinePoints(Min), true) },
                 IsClosed = false,
             };
@@ -59,14 +72,14 @@ public class ParametricCurve : Shape
             IEnumerable<Point> PolylinePoints(double start)
             {
                 if (start <= Max)
-                    yield return new (ParametricFunction(start).X, ParametricFunction(start).Y);
+                    yield return new (Parametric(start).X, Parametric(start).Y);
             }
 
             return new PathGeometry(new [] { polyline });
         }
     }
 
-    public ParametricCurve (ParametricFunction function) => ParametricFunction = function;
+    public ParametricCurve (ParametricFunction function) => Parametric = function;
 
     public bool IntersectsBall(Ellipse ball, out Vector reflectionNormal)
     {
