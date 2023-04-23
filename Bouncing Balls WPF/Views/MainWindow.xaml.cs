@@ -56,18 +56,32 @@ public partial class MainWindow
 
     private ParametricCurve AddParametricCurve()
     {
-        var parametricCurve = new ParametricCurve(t => new(12 * ( Math.Cos(t)), 12 * ( Math.Sin(t)))) {
+        var size = 150;
+        var parametricCurve = new ParametricCurve(t => new(Math.Cos(t),Math.Sin(t))) {
             MinT = 0,
             MaxT = 2 * Math.PI,
             IsClosed = true,
             Stroke = Brushes.OrangeRed,
-            StrokeThickness = 1
+            StrokeThickness = 1,
+            Width = size,
+            Height = size
         };
 
         Canvas.SetLeft(parametricCurve, 0.5 * Canvas.ActualWidth);
         Canvas.SetTop(parametricCurve, 0.5 * Canvas.ActualHeight);
 
         Canvas.Children.Add(parametricCurve);
+        var rectangle = new Rectangle() {
+            Width = size,
+            Height = size,
+            Stroke = Brushes.Blue,
+            StrokeThickness = 1,
+        };
+        Canvas.Children.Add(rectangle);
+
+        Canvas.SetLeft(rectangle, 0.5 * Canvas.ActualWidth);
+        Canvas.SetTop(rectangle, 0.5 * Canvas.ActualHeight);
+
         return parametricCurve;
     }
 

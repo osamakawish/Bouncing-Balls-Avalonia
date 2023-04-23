@@ -7,6 +7,9 @@ using System.Windows.Shapes;
 
 namespace Bouncing_Balls_WPF.Models;
 
+/// <summary>
+/// A parametric curve.
+/// </summary>
 public class ParametricCurve : Shape
 {
 #if DEBUG
@@ -47,7 +50,7 @@ public class ParametricCurve : Shape
         set => SetValue(IsClosedProperty, value);
     }
 
-    public ParametricFunction Parametric { get; }
+    public ParametricFunction Parametric { get; set; }
 
     public ParametricFunction Derivative(double halfDelta = 0.005)
         => t => (Parametric(t + halfDelta) - Parametric(t - halfDelta)) / (2 * halfDelta);
@@ -84,9 +87,18 @@ public class ParametricCurve : Shape
                 }
             }
 
-            Width = Bounds.Width + StrokeThickness;
-            Height = Bounds.Height + StrokeThickness;
-            return new PathGeometry(new[] { polyline });
+            var xScale = (Width ) / Bounds.Width;
+            var yScale = (Height) / Bounds.Height;
+
+            return new PathGeometry(new[] { polyline }) {
+                
+                Transform = new TransformGroup {
+                    Children = {
+                        new ScaleTransform(xScale, yScale, Bounds.Left, Bounds.Top),
+                        new TranslateTransform(-Bounds.Left, -Bounds.Top)
+                    }
+                }
+            };
         }
     }
 
