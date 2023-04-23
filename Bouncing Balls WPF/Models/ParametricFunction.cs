@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 namespace Bouncing_Balls_WPF.Models;
 
@@ -29,11 +30,11 @@ public static class ParametricFunctionExt
 
     public static double FindCriticalPoint(this ParametricFunction parametric, byte steps = 8)
     {
-
+        throw new NotImplementedException();
     }
 
     public static double FindZero(this ParametricFunction parametric, byte steps = 8)
     {
-
+        throw new NotImplementedException();
     }
 }

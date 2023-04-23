@@ -1,11 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using Bouncing_Balls_WPF.Models;
 using Bouncing_Balls_WPF.ViewModels;
-using Microsoft.VisualBasic.CompilerServices;
 
 namespace Bouncing_Balls_WPF.Views;
 
@@ -14,7 +16,7 @@ namespace Bouncing_Balls_WPF.Views;
 /// </summary>
 public partial class MainWindow
 {
-    private MainWindowViewModel _dataContext;
+    private readonly MainWindowViewModel _dataContext;
 
     private Storyboard Storyboard { get; } = new();
 
@@ -26,8 +28,9 @@ public partial class MainWindow
         DataContext = _dataContext;
 
         Loaded += delegate {
-            AddBall();
-            AddCurve();
+            _dataContext.Ball = AddBall();
+            _dataContext.Curve = AddCurve();
+            _dataContext.ParametricCurve = AddParametricCurve();
 
             Storyboard.Begin();
         };
@@ -44,10 +47,31 @@ public partial class MainWindow
                 Canvas.SetLeft(item, Canvas.GetLeft(item) * w);
                 Canvas.SetTop(item, Canvas.GetTop(item) * h);
             }
+
+            if (_dataContext.Curve == null) return;
+            _dataContext.Curve.Width *= w;
+            _dataContext.Curve.Height *= h;
         };
     }
 
-    private void AddCurve()
+    private ParametricCurve AddParametricCurve()
+    {
+        var parametricCurve = new ParametricCurve(t => new(12 * ( Math.Cos(t)), 12 * ( Math.Sin(t)))) {
+            MinT = 0,
+            MaxT = 2 * Math.PI,
+            IsClosed = true,
+            Stroke = Brushes.OrangeRed,
+            StrokeThickness = 1
+        };
+
+        Canvas.SetLeft(parametricCurve, 0.5 * Canvas.ActualWidth);
+        Canvas.SetTop(parametricCurve, 0.5 * Canvas.ActualHeight);
+
+        Canvas.Children.Add(parametricCurve);
+        return parametricCurve;
+    }
+
+    private Path AddCurve()
     {
         var arcSegment = new ArcSegment
         {
@@ -67,9 +91,10 @@ public partial class MainWindow
         };
 
         Canvas.Children.Add(path);
+        return path;
     }
 
-    private void AddBall()
+    private Ellipse AddBall()
     {
         var ball = new Ellipse
         {
@@ -87,11 +112,13 @@ public partial class MainWindow
         {
             From = 0.5 * Canvas.ActualHeight,
             To = 0.8 * Canvas.ActualHeight,
-            Duration = new (System.TimeSpan.FromSeconds(5))
+            Duration = new (TimeSpan.FromSeconds(5))
         };
 
         Storyboard.SetTarget(animation, ball);
         Storyboard.SetTargetProperty(animation, new(Canvas.TopProperty));
         Storyboard.Children.Add(animation);
+
+        return ball;
     }
 }

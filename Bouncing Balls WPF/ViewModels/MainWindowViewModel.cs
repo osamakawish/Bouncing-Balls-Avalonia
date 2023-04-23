@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Bouncing_Balls_WPF.Models;
 
 namespace Bouncing_Balls_WPF.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
-    private Path Curve { get; } = new();
+    internal Ellipse? Ball { get; set; }
+    internal Path? Curve { get; set; }
+    internal ParametricCurve? ParametricCurve { get; set; }
 
     private List<Ellipse> Balls { get; } = new();
 
