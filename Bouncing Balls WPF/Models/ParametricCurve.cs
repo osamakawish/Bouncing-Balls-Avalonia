@@ -87,8 +87,8 @@ public class ParametricCurve : Shape
                 }
             }
 
-            var xScale = (Width ) / Bounds.Width;
-            var yScale = (Height) / Bounds.Height;
+            var xScale = Width / Bounds.Width;
+            var yScale = Height / Bounds.Height;
 
             return new PathGeometry(new[] { polyline }) {
                 
