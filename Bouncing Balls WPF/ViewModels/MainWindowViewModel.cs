@@ -10,6 +10,10 @@ namespace Bouncing_Balls_WPF.ViewModels;
 public class MainWindowViewModel : ViewModelBase
 {
     internal Ellipse? Ball { get; set; }
+    internal Vector Velocity { get; set; } = new (0, 0);
+    internal Vector Gravity { get; set; } = new(0, 0.0001);
+
+
     internal Path? Curve { get; set; }
     internal ParametricCurve? ParametricCurve { get; set; }
 

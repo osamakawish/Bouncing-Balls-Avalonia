@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Bouncing_Balls_WPF.Models;
 using Bouncing_Balls_WPF.ViewModels;
@@ -17,8 +18,7 @@ namespace Bouncing_Balls_WPF.Views;
 public partial class MainWindow
 {
     private readonly MainWindowViewModel _dataContext;
-
-    private Storyboard Storyboard { get; } = new();
+    private bool _isHit;
 
     public MainWindow()
     {
@@ -31,8 +31,6 @@ public partial class MainWindow
             _dataContext.Ball = AddBall();
             _dataContext.Curve = AddCurve();
             _dataContext.ParametricCurve = AddParametricCurve();
-
-            Storyboard.Begin();
         };
 
         Canvas.SizeChanged += (_, args) =>
@@ -40,15 +38,17 @@ public partial class MainWindow
             var w = args.NewSize.Width / args.PreviousSize.Width;
             var h = args.NewSize.Height / args.PreviousSize.Height;
 
-            foreach (var obj in Canvas.Children)
-            {
+            if (_dataContext.Curve is null) return;
+            _dataContext.Curve.Width *= w;
+            _dataContext.Curve.Height *= h;
+
+            foreach (var obj in Canvas.Children) {
                 if (obj is not UIElement item) continue;
 
                 Canvas.SetLeft(item, Canvas.GetLeft(item) * w);
                 Canvas.SetTop(item, Canvas.GetTop(item) * h);
             }
 
-            if (_dataContext.Curve == null) return;
             _dataContext.Curve.Width *= w;
             _dataContext.Curve.Height *= h;
         };
@@ -71,16 +71,6 @@ public partial class MainWindow
         Canvas.SetTop(parametricCurve, 0.5 * Canvas.ActualHeight);
 
         Canvas.Children.Add(parametricCurve);
-        var rectangle = new Rectangle() {
-            Width = size,
-            Height = size,
-            Stroke = Brushes.Blue,
-            StrokeThickness = 1,
-        };
-        Canvas.Children.Add(rectangle);
-
-        Canvas.SetLeft(rectangle, 0.5 * Canvas.ActualWidth);
-        Canvas.SetTop(rectangle, 0.5 * Canvas.ActualHeight);
 
         return parametricCurve;
     }
@@ -122,17 +112,53 @@ public partial class MainWindow
 
         Canvas.Children.Add(ball);
 
-        var animation = new DoubleAnimation
+        Timer timer = new(1.0 / 24);
+        timer.Elapsed += (_, _) => Dispatcher.Invoke(() =>
         {
-            From = 0.5 * Canvas.ActualHeight,
-            To = 0.8 * Canvas.ActualHeight,
-            Duration = new (TimeSpan.FromSeconds(5))
-        };
+            var geo = _dataContext.Ball?.RenderedGeometry;
+            if (_dataContext.Ball == null) return;
+            if (geo != null)
+                geo.Transform = new TranslateTransform(Canvas.GetLeft(_dataContext.Ball), Canvas.GetTop(_dataContext.Ball));
 
-        Storyboard.SetTarget(animation, ball);
-        Storyboard.SetTargetProperty(animation, new(Canvas.TopProperty));
-        Storyboard.Children.Add(animation);
+            var detail = _dataContext.Curve?.RenderedGeometry.StrokeContainsWithDetail(
+                new(Brushes.Black, _dataContext.Curve.StrokeThickness), geo);
+
+            if (detail > IntersectionDetail.Empty && !_isHit) {
+                var points =
+                    _dataContext.Curve?.RenderedGeometry.GetIntersectionPoints(_dataContext.Ball.RenderedGeometry);
+
+                if (points != null) {
+                    var xMean = points.Average(p => p.X);
+                    var yMean = points.Average(p => p.Y);
+                    var point = new Point(xMean, yMean);
+                    
+                    var velocityDirection = ball.Center() - point;
+                    var velocity = velocityDirection * _dataContext.Velocity.Length / velocityDirection.Length;
+
+                    _dataContext.Velocity = velocity;
+                }
+            }
+
+            _dataContext.Velocity += _dataContext.Gravity;
+            Canvas.SetLeft(ball, Canvas.GetLeft(ball) + _dataContext.Velocity.X);
+            Canvas.SetTop(ball, Canvas.GetTop(ball) + _dataContext.Velocity.Y);
+        });
+        timer.Start();
+        Closing += (_, _) => timer.Stop();
 
         return ball;
+    }
+
+    private void HitTestBall(object sender, RoutedEventArgs e)
+    {
+        var geo = _dataContext.Ball?.RenderedGeometry;
+        if (_dataContext.Ball == null) return;
+        if (geo != null)
+            geo.Transform = new TranslateTransform(Canvas.GetLeft(_dataContext.Ball), Canvas.GetTop(_dataContext.Ball));
+
+        var detail =
+            _dataContext.Ball?.RenderedGeometry.FillContainsWithDetail(geo);
+
+        var ellipseGeometry = _dataContext.Ball?.RenderedGeometry as EllipseGeometry;
     }
 }
