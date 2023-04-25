@@ -124,19 +124,11 @@ public partial class MainWindow
                 new(Brushes.Black, _dataContext.Curve.StrokeThickness), geo);
 
             if (detail > IntersectionDetail.Empty && !_isHit) {
-                var points =
-                    _dataContext.Curve?.RenderedGeometry.GetIntersectionPoints(_dataContext.Ball.RenderedGeometry);
+                var points = _dataContext.Curve?
+                    .RenderedGeometry
+                    .GetIntersectionPoints(_dataContext.Ball.RenderedGeometry);
 
-                if (points != null) {
-                    var xMean = points.Average(p => p.X);
-                    var yMean = points.Average(p => p.Y);
-                    var point = new Point(xMean, yMean);
-                    
-                    var velocityDirection = ball.Center() - point;
-                    var velocity = velocityDirection * _dataContext.Velocity.Length / velocityDirection.Length;
-
-                    _dataContext.Velocity = velocity;
-                }
+                if (points != null) Bounce(points, ball);
             }
 
             _dataContext.Velocity += _dataContext.Gravity;
@@ -149,16 +141,31 @@ public partial class MainWindow
         return ball;
     }
 
+    private void Bounce(Point[] points, Ellipse ball)
+    {
+        var xMean = points.Average(p => p.X);
+        var yMean = points.Average(p => p.Y);
+        var point = new Point(xMean, yMean);
+
+        var ballCenter = ball.Center();
+        var bounceDirection = ballCenter - point;
+        var bounceDirectionLength = bounceDirection.Length;
+        var velocity = bounceDirection * _dataContext.Velocity.Length / bounceDirectionLength;
+
+        // Revise ball position first.
+        var ballRadius = 0.5 * ball.Width;
+        var ballPositionDifference = bounceDirection * (ballRadius / bounceDirectionLength - bounceDirectionLength);
+        Canvas.SetLeft(ball, Canvas.GetLeft(ball) + ballPositionDifference.X);
+        Canvas.SetTop(ball, Canvas.GetTop(ball) + ballPositionDifference.Y);
+
+        _dataContext.Velocity = velocity;
+    }
+
     private void HitTestBall(object sender, RoutedEventArgs e)
     {
         var geo = _dataContext.Ball?.RenderedGeometry;
         if (_dataContext.Ball == null) return;
         if (geo != null)
             geo.Transform = new TranslateTransform(Canvas.GetLeft(_dataContext.Ball), Canvas.GetTop(_dataContext.Ball));
-
-        var detail =
-            _dataContext.Ball?.RenderedGeometry.FillContainsWithDetail(geo);
-
-        var ellipseGeometry = _dataContext.Ball?.RenderedGeometry as EllipseGeometry;
     }
 }
