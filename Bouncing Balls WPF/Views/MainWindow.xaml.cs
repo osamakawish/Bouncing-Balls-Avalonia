@@ -30,7 +30,7 @@ public partial class MainWindow
         Loaded += delegate {
             _dataContext.Ball = AddBall();
             _dataContext.Curve = AddCurve();
-            _dataContext.ParametricCurve = AddParametricCurve();
+            //_dataContext.ParametricCurve = AddParametricCurve();
         };
 
         Canvas.SizeChanged += (_, args) =>
@@ -56,8 +56,8 @@ public partial class MainWindow
 
     private ParametricCurve AddParametricCurve()
     {
-        var size = 150;
-        var parametricCurve = new ParametricCurve(t => new(Math.Cos(t),Math.Sin(t))) {
+        const int size = 150;
+        var parametricCurve = new ParametricCurve(t => new(Math.Cos(t), Math.Sin(t))) {
             MinT = 0,
             MaxT = 2 * Math.PI,
             IsClosed = true,
@@ -115,23 +115,30 @@ public partial class MainWindow
         Timer timer = new(1.0 / 24);
         timer.Elapsed += (_, _) => Dispatcher.Invoke(() =>
         {
-            var geo = _dataContext.Ball?.RenderedGeometry;
-            if (_dataContext.Ball == null) return;
-            if (geo != null)
-                geo.Transform = new TranslateTransform(Canvas.GetLeft(_dataContext.Ball), Canvas.GetTop(_dataContext.Ball));
+            var geo = ball.RenderedGeometry;
+            geo.Transform = new TranslateTransform(Canvas.GetLeft(ball), Canvas.GetTop(ball));
 
             var detail = _dataContext.Curve?.RenderedGeometry.StrokeContainsWithDetail(
                 new(Brushes.Black, _dataContext.Curve.StrokeThickness), geo);
 
-            if (detail > IntersectionDetail.Empty && !_isHit) {
-                var points = _dataContext.Curve?
-                    .RenderedGeometry
-                    .GetIntersectionPoints(_dataContext.Ball.RenderedGeometry);
+            switch (detail)
+            {
+                case > IntersectionDetail.Empty when !_isHit:
+                    var points = _dataContext.Curve?
+                        .RenderedGeometry
+                        .GetIntersectionPoints(ball.RenderedGeometry);
 
-                if (points != null) Bounce(points, ball);
+                    if (points != null) Bounce(points, ball);
+                    _isHit = true;
+                    break;
+
+                case IntersectionDetail.Empty:
+                    _isHit = false;
+                    _dataContext.NormalForce = new (0, 0);
+                    break;
             }
 
-            _dataContext.Velocity += _dataContext.Gravity;
+            _dataContext.Velocity += _dataContext.Gravity + _dataContext.NormalForce;
             Canvas.SetLeft(ball, Canvas.GetLeft(ball) + _dataContext.Velocity.X);
             Canvas.SetTop(ball, Canvas.GetTop(ball) + _dataContext.Velocity.Y);
         });
@@ -143,6 +150,9 @@ public partial class MainWindow
 
     private void Bounce(Point[] points, Ellipse ball)
     {
+        // Try to compute normal force on each point instead.
+        // Or try to compute velocity on each point instead, then sum the velocities.
+
         var xMean = points.Average(p => p.X);
         var yMean = points.Average(p => p.Y);
         var point = new Point(xMean, yMean);
@@ -150,23 +160,18 @@ public partial class MainWindow
         var ballCenter = ball.Center();
         var bounceDirection = ballCenter - point;
         var bounceDirectionLength = bounceDirection.Length;
-        var velocity = bounceDirection * _dataContext.Velocity.Length / bounceDirectionLength;
+
+        //_dataContext.NormalForce = (_dataContext.Gravity * bounceDirection / bounceDirection.LengthSquared) * bounceDirection;
 
         // Revise ball position first.
-        var ballRadius = 0.5 * ball.Width;
-        var ballRadiusVector = -bounceDirection * ballRadius / bounceDirectionLength;
-        var ballPositionDifference = bounceDirection * (1 - ballRadius / bounceDirectionLength);
-        Canvas.SetLeft(ball, Canvas.GetLeft(ball) + ballPositionDifference.X);
-        Canvas.SetTop(ball, Canvas.GetTop(ball) + ballPositionDifference.Y);
+        //var ballRadius = 0.5 * ball.Width;
+        //var ballRadiusVector = bounceDirection * (ballRadius / bounceDirectionLength);
+        //var ballPositionDifference = -bounceDirection + ballRadiusVector;
+        //Canvas.SetLeft(ball, Canvas.GetLeft(ball) + ballPositionDifference.X);
+        //Canvas.SetTop(ball, Canvas.GetTop(ball) + ballPositionDifference.Y);
 
+        var velocityLengthRatio = _dataContext.Velocity.Length / bounceDirectionLength;
+        var velocity = bounceDirection * velocityLengthRatio;
         _dataContext.Velocity = velocity;
-    }
-
-    private void HitTestBall(object sender, RoutedEventArgs e)
-    {
-        var geo = _dataContext.Ball?.RenderedGeometry;
-        if (_dataContext.Ball == null) return;
-        if (geo != null)
-            geo.Transform = new TranslateTransform(Canvas.GetLeft(_dataContext.Ball), Canvas.GetTop(_dataContext.Ball));
     }
 }

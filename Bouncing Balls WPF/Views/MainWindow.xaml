@@ -13,7 +13,7 @@
         </Grid.RowDefinitions>
         
         <StackPanel Orientation="Horizontal">
-            <Button Width="24" Click="HitTestBall"></Button>
+            <Button Width="24"/>
         </StackPanel>
 
         <Canvas x:Name="Canvas" Grid.Row="1"/>
