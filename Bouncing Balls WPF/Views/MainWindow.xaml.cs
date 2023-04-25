@@ -154,7 +154,8 @@ public partial class MainWindow
 
         // Revise ball position first.
         var ballRadius = 0.5 * ball.Width;
-        var ballPositionDifference = bounceDirection * (ballRadius / bounceDirectionLength - bounceDirectionLength);
+        var ballRadiusVector = -bounceDirection * ballRadius / bounceDirectionLength;
+        var ballPositionDifference = bounceDirection * (1 - ballRadius / bounceDirectionLength);
         Canvas.SetLeft(ball, Canvas.GetLeft(ball) + ballPositionDifference.X);
         Canvas.SetTop(ball, Canvas.GetTop(ball) + ballPositionDifference.Y);
 
