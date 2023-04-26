@@ -168,6 +168,8 @@ public partial class MainWindow
     {
 #if DEBUG
         _log.AppendLine($"Points: {string.Join(" | ", points.Select(p => $"({p.X:f}, {p.Y:f})"))}");
+        
+        // Creates tracker points for the ball intersection points.
         points.ToList().ForEach(p =>
         {
             Ellipse ellipse = new()
