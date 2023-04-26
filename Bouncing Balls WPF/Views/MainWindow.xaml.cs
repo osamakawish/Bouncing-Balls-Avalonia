@@ -195,8 +195,11 @@ public partial class MainWindow
         var bounceDirection = ballCenter - point;
         var bounceDirectionLength = bounceDirection.Length;
 
-        _dataContext.NormalForce = (_dataContext.Gravity * bounceDirection / bounceDirection.LengthSquared) * bounceDirection;
-        _log.AppendLine($"Normal force: {_dataContext.NormalForce} [{_dataContext.NormalForce.Length}]");
+        var gravity = _dataContext.Gravity;
+        _dataContext.NormalForce = (gravity * bounceDirection / bounceDirection.LengthSquared) * bounceDirection;
+        var normalForce = _dataContext.NormalForce;
+        _log.AppendLine($"Normal force: {normalForce} [{normalForce.Length}]");
+        _log.AppendLine($"g * normal / (|g||normal|) = {gravity * normalForce / (gravity.Length * normalForce.Length)}");
 
         // Revise ball position first.
         //var ballRadius = 0.5 * ball.Width;
